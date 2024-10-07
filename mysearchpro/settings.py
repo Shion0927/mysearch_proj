@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'mysearchproapp'
+    'mysearchproapp',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -75,15 +76,15 @@ WSGI_APPLICATION = 'mysearchpro.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = { 
-    'default': { 
-        'ENGINE': 'django.db.backends.postgresql', 
-        'NAME': 'mysearchproapp_db', 
-        'USER': 'lemonmilkteatam', 
-        'PASSWORD': 'lemonteatam', 
-        'HOST': 'localhost', 
-        'PORT': '5434', 
-    } 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mysearchproapp_db',
+        'USER': 'lemonmilkteatam',
+        'PASSWORD': 'lemonteatam',
+        'HOST': 'localhost',
+        'PORT': '5434',
+    }
 }
 
 

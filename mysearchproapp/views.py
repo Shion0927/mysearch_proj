@@ -26,11 +26,10 @@ def product_update(request, pk):
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
             form.save()
-            return redirect('product_detail', pk=product.pk)
+            return redirect('product_list')
     else:
         form = ProductForm(instance=product)
-    # product オブジェクトをテンプレートに渡す
-    return render(request,  'product_form.html',  {'form':  form,  'product': product})
+    return render(request, 'product_form.html', {'form': form, 'product': product})
 
 
 def product_delete(request, pk):
@@ -53,16 +52,19 @@ def search_view(request):
         query = form.cleaned_data['query']
         if query:
             results = results.filter(name__icontains=query)
+            if query in ['admin_product_list']:  # ここにリダイレクトしたい単語を追加
+                return redirect('product_list')
+
     # カテゴリフィルタリング
     category_name = request.GET.get('category')
     if category_name:
         try:
-            # カテゴリ名に基づいてカテゴリIDを取得
             category = Category.objects.get(name=category_name)
             results = results.filter(category_id=category.id)
         except Category.DoesNotExist:
             results = results.none()  # 存在しないカテゴリの場合、結果を空にする
             category = None
+
     # 価格のフィルタリング（最低価格・最高価格）
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
@@ -78,9 +80,28 @@ def search_view(request):
     elif sort_by == 'price_desc':
         results = results.order_by('-price')
 
-    # クエリセットをリストに変換せず、直接Paginatorに渡す
-    paginator = Paginator(results, 10)
+    paginator = Paginator(results, 10)  # 1ページあたり10件
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'search.html', {'form': form, 'page_obj': page_obj, 'results': results})
+    # 結果の件数をカウント
+    results_count = results.count()
+
+    return render(request, 'search.html', {
+        'form': form,
+        'page_obj': page_obj,
+        'results_count': results_count  # 結果の件数を追加
+    })
+
+
+    # ページネーション
+    paginator = Paginator(results, 10)  # 1ページあたり10件
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'search.html', {
+        'form': form,
+        'page_obj': page_obj,
+        'results': results,
+        'total_results': results.count(),  # 検索結果の件数を取得
+    })
