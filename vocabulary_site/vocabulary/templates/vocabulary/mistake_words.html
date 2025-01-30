@@ -1,0 +1,53 @@
+{% extends 'vocabulary/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <div class="word-list-header">
+        <h2 class="text-center"><i class="fas fa-exclamation-triangle me-2"></i>間違えた単語一覧</h2>
+    </div>
+
+    {% if mistakes %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>単語</th>
+                        <th>意味</th>
+                        <th>言語</th>
+                        <th>クイズ日時</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mistake in mistakes %}
+                        <tr>
+                            <td>{{ mistake.word.word }}</td>
+                            <td>{{ mistake.word.meaning }}</td>
+                            <td><span class="badge bg-secondary">{{ mistake.word.language }}</span></td>
+                            <td>{{ mistake.created_at|date:"Y/m/d H:i" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'mark_as_learned' mistake.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>覚えた
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle me-2"></i>間違えた単語はありません。
+        </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <a href="{% url 'word_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>単語一覧に戻る</a>
+        <a href="{% url 'quiz' %}" class="btn btn-primary"><i class="fas fa-question-circle me-1"></i>新しいクイズに挑戦</a>
+    </div>
+{% endblock %}
+
+

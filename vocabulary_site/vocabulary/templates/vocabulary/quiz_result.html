@@ -1,0 +1,11 @@
+{% extends 'vocabulary/base.html' %}
+
+{% block content %}
+    <h2 class="mb-4">クイズ結果</h2>
+    <p class="mb-3">正解数: {{ correct_answers }} / {{ total_questions }}</p>
+    <p class="mb-4">スコア: {{ score }}%</p>
+    <a href="{% url 'quiz' %}" class="btn btn-primary">新しいクイズを始める</a>
+    <a href="{% url 'word_list' %}" class="btn btn-secondary ml-2">単語一覧に戻る</a>
+{% endblock %}
+
+
