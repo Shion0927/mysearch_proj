@@ -1,0 +1,31 @@
+{% extends 'vocabulary/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">言語一覧</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>言語</th>
+                <th>単語数</th>
+                <th>アクション</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for language in languages %}
+            <tr>
+                <td>{{ language.name }}</td>
+                <td>{{ language.word_count }}</td>
+                <td>
+                    <a href="{% url 'edit_language' language.id %}" class="btn btn-sm btn-primary">編集</a>
+                    <a href="{% url 'delete_language' language.id %}" class="btn btn-sm btn-danger">削除</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'add_language' %}" class="btn btn-success">新しい言語を追加</a>
+</div>
+{% endblock %}
+
+

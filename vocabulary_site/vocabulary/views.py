@@ -223,3 +223,52 @@ def mark_as_learned(request, mistake_id):
     messages.success(request, f"'{mistake.word.word}'を覚えた単語としてマークしました。")
     return redirect('mistake_words')
 
+
+@login_required
+def edit_language(request, language_id):
+    language = get_object_or_404(Language, id=language_id)
+    if request.method == 'POST':
+        form = LanguageForm(request.POST, instance=language)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '言語が更新されました。')
+            return redirect('word_list')
+    else:
+        form = LanguageForm(instance=language)
+    return render(request, 'vocabulary/edit_language.html', {'form': form, 'language': language})
+
+@login_required
+def delete_language(request, language_id):
+    language = get_object_or_404(Language, id=language_id)
+    if request.method == 'POST':
+        language.delete()
+        messages.success(request, '言語が削除されました。')
+        return redirect('word_list')
+    return render(request, 'vocabulary/delete_language.html', {'language': language})
+
+@login_required
+def language_list(request):
+    languages = Language.objects.annotate(word_count=Count('word'))
+    return render(request, 'vocabulary/language_list.html', {'languages': languages})
+
+@login_required
+def edit_word(request, word_id):
+    word = get_object_or_404(Word, id=word_id, user=request.user)
+    if request.method == 'POST':
+        form = WordForm(request.POST, instance=word)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '単語が更新されました。')
+            return redirect('word_list')
+    else:
+        form = WordForm(instance=word)
+    return render(request, 'vocabulary/edit_word.html', {'form': form, 'word': word})
+
+@login_required
+def delete_word(request, word_id):
+    word = get_object_or_404(Word, id=word_id, user=request.user)
+    if request.method == 'POST':
+        word.delete()
+        messages.success(request, '単語が削除されました。')
+        return redirect('word_list')
+    return render(request, 'vocabulary/delete_word.html', {'word': word})

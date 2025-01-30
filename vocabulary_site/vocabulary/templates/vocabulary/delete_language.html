@@ -1,0 +1,15 @@
+{% extends 'vocabulary/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">言語を削除</h2>
+    <p>本当に "{{ language.name }}" を削除しますか？この言語に関連するすべての単語も削除されます。</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">削除</button>
+        <a href="{% url 'language_list' %}" class="btn btn-secondary">キャンセル</a>
+    </form>
+</div>
+{% endblock %}
+
+
