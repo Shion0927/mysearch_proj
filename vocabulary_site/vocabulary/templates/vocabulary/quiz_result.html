@@ -1,11 +1,30 @@
 {% extends 'vocabulary/base.html' %}
 
 {% block content %}
+<div class="container">
     <h2 class="mb-4">クイズ結果</h2>
-    <p class="mb-3">正解数: {{ correct_answers }} / {{ total_questions }}</p>
-    <p class="mb-4">スコア: {{ score }}%</p>
-    <a href="{% url 'quiz' %}" class="btn btn-primary">新しいクイズを始める</a>
-    <a href="{% url 'word_list' %}" class="btn btn-secondary ml-2">単語一覧に戻る</a>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    {% if quiz_id %}
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">スコア: {{ score_percentage }}%</h3>
+                <p class="card-text">正解数: {{ correct_answers }} / {{ total_questions }}</p>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="{% url 'clear_quiz_session' %}" class="btn btn-primary">新しいクイズを始める</a>
+        <a href="{% url 'word_list' %}" class="btn btn-secondary ml-2">単語一覧に戻る</a>
+    </div>
+</div>
 {% endblock %}
-
 

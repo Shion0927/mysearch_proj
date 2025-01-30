@@ -1,18 +1,33 @@
 {% extends 'vocabulary/base.html' %}
-{% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
+  <div class="container">
     <h2 class="mb-4">問題 {{ question_number }} / {{ total_questions }}</h2>
-    <p class="mb-3">次の意味に合う単語は何ですか？</p>
-    <p class="mb-4"><strong>{{ word.meaning }}</strong></p>
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="answer" class="form-label">回答:</label>
-            <input type="text" name="answer" id="answer" class="form-control" required autofocus>
-        </div>
-        <button type="submit" class="btn btn-primary">回答する</button>
+    {% if question_type == 'word' %}
+        <p class="mb-3">次の単語の意味は何ですか？</p>
+        <p class="mb-4"><strong>{{ word.word }}</strong></p>
+    {% else %}
+        <p class="mb-3">次の意味に合う単語は何ですか？</p>
+        <p class="mb-4"><strong>{{ word.meaning }}</strong></p>
+    {% endif %}
+    <form method="post" class="mb-4" id="quizForm">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="answer" class="form-label">
+            {% if question_type == 'word' %}
+                意味:
+            {% else %}
+                単語:
+            {% endif %}
+        </label>
+        <input type="text" name="answer" id="answer" class="form-control" required autofocus autocomplete="off">
+      </div>
+      <button type="submit" class="btn btn-primary">回答する</button>
     </form>
+  </div>
 {% endblock %}
 
-
+{% block extra_js %}
+  <script src="{% static 'js/quiz_question.js' %}"></script>
+{% endblock %}

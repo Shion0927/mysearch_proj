@@ -1,13 +1,14 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
-from django.db.models import Q
-from .models import Word, Language, Quiz, MistakeWord
-from .forms import WordForm, LanguageForm
-from django.contrib import messages 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import random
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Q, Count
+from .models import Word, Quiz, MistakeWord, Language
+from django.core.paginator import Paginator
+
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
+from .forms import WordForm, LanguageForm
 
 def register(request):
     if request.method == 'POST':
@@ -19,7 +20,7 @@ def register(request):
             return redirect('word_list')
     else:
         form = UserCreationForm()
-    return render(request, 'vocabulary/register.html', {'form': form})
+    return render(request, 'registration/register.html', {'form': form})
 
 def user_login(request):
     if request.method == 'POST':
@@ -43,7 +44,7 @@ def word_list(request):
     words = Word.objects.filter(user=request.user)
 
     if query:
-        words = words.filter(Q(word__icontains=query) | Q(meaning__icontains=query))
+        words = words.filter(Q(word__icontains=query) | Q(meaning__icontains(query)))
     if language:
         words = words.filter(language__name=language)
 
@@ -51,7 +52,7 @@ def word_list(request):
     total_words_count = words.count()
 
     # ページネーション
-    paginator = Paginator(words, 10)  # 1ページあたり10件表示
+    paginator = Paginator(words, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -94,38 +95,53 @@ def add_language(request):
     return render(request, 'vocabulary/add_language.html', {'form': form})
 
 @login_required
-def quiz(request):
+def quiz_start(request):
+    languages = Language.objects.filter(word__user=request.user).distinct()
+    language_word_counts = {
+        lang.id: Word.objects.filter(user=request.user, language=lang).count()
+        for lang in languages
+    }
+
     if request.method == 'POST':
         language_id = request.POST.get('language')
         num_questions = int(request.POST.get('num_questions', 10))
-        language = Language.objects.get(id=language_id)
-        words = list(Word.objects.filter(user=request.user, language=language).order_by('-created_at'))
         
+        words = list(Word.objects.filter(user=request.user, language_id=language_id))
         if len(words) < num_questions:
             messages.error(request, f"選択した言語の単語数が{num_questions}個未満です。全ての単語を使用してクイズを作成します。")
             num_questions = len(words)
         
+        if num_questions == 0:
+            messages.error(request, "選択した言語に単語がありません。")
+            return redirect('quiz_start')
+
         quiz_words = random.sample(words, num_questions)
+        quiz_types = [random.choice(['word', 'meaning']) for _ in range(num_questions)]
+        
+        quiz = Quiz.objects.create(
+            user=request.user,
+            language_id=language_id,
+            total_questions=num_questions
+        )
+        
         request.session['quiz_words'] = [word.id for word in quiz_words]
+        request.session['quiz_types'] = quiz_types
         request.session['current_question'] = 0
         request.session['correct_answers'] = 0
-        
-        # クイズオブジェクトを作成し、セッションにIDを保存
-        quiz = Quiz.objects.create(user=request.user, language=language, total_questions=num_questions)
         request.session['quiz_id'] = quiz.id
-        
+
         return redirect('quiz_question')
-    
-    languages = Language.objects.filter(word__user=request.user).distinct()
-    language_word_counts = {lang.id: Word.objects.filter(user=request.user, language=lang).count() for lang in languages}
-    return render(request, 'vocabulary/quiz_start.html', {
+
+    context = {
         'languages': languages,
-        'language_word_counts': language_word_counts
-    })
+        'language_word_counts': language_word_counts,
+    }
+    return render(request, 'vocabulary/quiz_start.html', context)
 
 @login_required
 def quiz_question(request):
     quiz_words = request.session.get('quiz_words', [])
+    quiz_types = request.session.get('quiz_types', [])
     current_question = request.session.get('current_question', 0)
     quiz_id = request.session.get('quiz_id')
     
@@ -133,48 +149,67 @@ def quiz_question(request):
         return redirect('quiz_result')
     
     word = Word.objects.get(id=quiz_words[current_question])
+    question_type = quiz_types[current_question]
     
     if request.method == 'POST':
-        user_answer = request.POST.get('answer', '').strip().lower()
-        correct_answer = word.word.lower()
+        user_answer = next((value for key, value in request.POST.items() if key.startswith('answer')), '').strip().lower()
+        correct_answer = word.word.lower() if question_type == 'meaning' else word.meaning.lower()
         
         if user_answer == correct_answer:
             request.session['correct_answers'] = request.session.get('correct_answers', 0) + 1
             messages.success(request, "正解です！")
         else:
-            messages.error(request, f"不正解です。正解は '{word.word}' でした。")
-            # 間違えた単語を保存
+            messages.error(request, f"不正解です。正解は '{correct_answer}' でした。")
             quiz = Quiz.objects.get(id=quiz_id)
             MistakeWord.objects.get_or_create(user=request.user, word=word, quiz=quiz)
         
         request.session['current_question'] = current_question + 1
         return redirect('quiz_question')
     
-    return render(request, 'vocabulary/quiz_question.html', {'word': word, 'question_number': current_question + 1, 'total_questions': len(quiz_words)})
+    return render(request, 'vocabulary/quiz_question.html', {
+        'word': word,
+        'question_type': question_type,
+        'question_number': current_question + 1,
+        'total_questions': len(quiz_words)
+    })
 
 @login_required
 def quiz_result(request):
+    quiz_id = request.session.get('quiz_id')
+    
+    if not quiz_id:
+        messages.error(request, "クイズセッションが見つかりません。新しいクイズを開始してください。")
+        return redirect('quiz_start')
+    
+    try:
+        quiz = Quiz.objects.get(id=quiz_id)
+    except Quiz.DoesNotExist:
+        messages.error(request, "クイズが見つかりません。新しいクイズを開始してください。")
+        return redirect('quiz_start')
+    
     correct_answers = request.session.get('correct_answers', 0)
-    total_questions = len(request.session.get('quiz_words', []))
-    score = int((correct_answers / total_questions) * 100) if total_questions > 0 else 0
+    total_questions = quiz.total_questions
     
-    quiz = Quiz.objects.create(
-        user=request.user,
-        language=Word.objects.get(id=request.session['quiz_words'][0]).language,
-        score=score,
-        total_questions=total_questions
-    )
+    score_percentage = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
     
-    # セッションのクリーンアップ
-    for key in ['quiz_words', 'current_question', 'correct_answers', 'quiz_id']:
-        if key in request.session:
-            del request.session[key]
+    # クイズ結果を表示した後にセッションデータをクリア
+    request.session['quiz_completed'] = True
     
-    return render(request, 'vocabulary/quiz_result.html', {
-        'score': score,
+    context = {
         'correct_answers': correct_answers,
-        'total_questions': total_questions
-    })
+        'total_questions': total_questions,
+        'quiz_id': quiz_id,
+        'score_percentage': round(score_percentage, 2)
+    }
+    
+    return render(request, 'vocabulary/quiz_result.html', context)
+
+@login_required
+def clear_quiz_session(request):
+    keys_to_remove = ['quiz_words', 'quiz_types', 'current_question', 'correct_answers', 'quiz_id', 'quiz_completed']
+    for key in keys_to_remove:
+        request.session.pop(key, None)
+    return redirect('quiz_start')
 
 @login_required
 def mistake_words(request):
