@@ -1,0 +1,34 @@
+{% extends 'vocabulary/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <h2 class="mb-4">クイズを始める</h2>
+    <form method="post" class="mb-4" id="quizForm">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="language" class="form-label">言語を選択:</label>
+            <select name="language" id="language" class="form-select" required>
+                <option value="">言語を選択してください</option>
+                {% for language in languages %}
+                    <option value="{{ language.id }}" data-word-count="{{ language_word_counts|get_item:language.id }}">
+                        {{ language.name }} ({{ language_word_counts|get_item:language.id }}単語)
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="num_questions" class="form-label">問題数:</label>
+            <input type="number" name="num_questions" id="num_questions" class="form-control" value="10" min="1" required>
+            <small id="questionCountHelp" class="form-text text-muted">選択した言語の単語数を超える問題数は設定できません。</small>
+        </div>
+        <button type="submit" class="btn btn-primary">クイズを開始</button>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/quiz_start.js' %}"></script>
+{% endblock %}
+
+

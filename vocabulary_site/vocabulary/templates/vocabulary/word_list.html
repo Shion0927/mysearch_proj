@@ -1,0 +1,116 @@
+{% extends 'vocabulary/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <div class="word-list-header">
+        <h2 class="text-center"><i class="fas fa-book me-2"></i>単語一覧</h2>
+    </div>
+
+    <form method="get" class="mb-4" id="searchForm">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" name="query" class="form-control" placeholder="単語または意味を検索" value="{{ query|default:'' }}">
+                    <button type="submit" class="btn btn-outline-secondary" id="searchButton">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="language" class="form-select">
+                    <option value="">全ての言語</option>
+                    {% for language in languages %}
+                        <option value="{{ language.name }}" {% if language.name == current_language %}selected{% endif %}>
+                            {{ language.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-1"></i>フィルター</button>
+            </div>
+        </div>
+    </form>
+
+    <p class="mb-3">検索結果: {{ total_words_count }} 件</p>
+
+    {% if words %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>単語</th>
+                        <th>意味</th>
+                        <th>言語</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for word in words %}
+                        <tr>
+                            <td>{{ word.word }}</td>
+                            <td>{{ word.meaning }}</td>
+                            <td><span class="badge bg-secondary">{{ word.language }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle me-2"></i>単語が見つかりません。
+        </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <a href="{% url 'add_word' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>新しい単語を追加</a>
+        <a href="{% url 'quiz' %}" class="btn btn-secondary"><i class="fas fa-question-circle me-1"></i>クイズに挑戦</a>
+    </div>
+
+    {% if words.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if words.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ words.previous_page_number }}{% if query %}&query={{ query }}{% endif %}{% if current_language %}&language={{ current_language }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for i in words.paginator.page_range %}
+                    {% if words.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if query %}&query={{ query }}{% endif %}{% if current_language %}&language={{ current_language }}{% endif %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if words.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ words.next_page_number }}{% if query %}&query={{ query }}{% endif %}{% if current_language %}&language={{ current_language }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}
+
+<script>
+    document.getElementById('searchButton').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('searchForm').submit();
+    });
+</script>
+
