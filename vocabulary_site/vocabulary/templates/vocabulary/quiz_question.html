@@ -1,0 +1,18 @@
+{% extends 'vocabulary/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <h2 class="mb-4">問題 {{ question_number }} / {{ total_questions }}</h2>
+    <p class="mb-3">次の意味に合う単語は何ですか？</p>
+    <p class="mb-4"><strong>{{ word.meaning }}</strong></p>
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="answer" class="form-label">回答:</label>
+            <input type="text" name="answer" id="answer" class="form-control" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary">回答する</button>
+    </form>
+{% endblock %}
+
+
