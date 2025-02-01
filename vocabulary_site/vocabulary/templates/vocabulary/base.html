@@ -28,7 +28,7 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownWords" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-book"></i><span class="d-lg-none ms-2">単語</span>
+                                <i class="fas fa-book me-1"></i>単語
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdownWords">
                                 <li><a class="dropdown-item" href="{% url 'word_list' %}"><i class="fas fa-list me-2"></i>単語一覧</a></li>
@@ -37,16 +37,16 @@
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownLanguages" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-language"></i><span class="d-lg-none ms-2">言語</span>
+                                <i class="fas fa-language me-1"></i>言語
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdownLanguages">
                                 <li><a class="dropdown-item" href="{% url 'language_list' %}"><i class="fas fa-list me-2"></i>言語一覧</a></li>
                                 <li><a class="dropdown-item" href="{% url 'add_language' %}"><i class="fas fa-plus me-2"></i>言語追加</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'quiz_start' %}" title="クイズ"><i class="fas fa-question-circle"></i><span class="d-lg-none ms-2">クイズ</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'mistake_words' %}" title="間違えた単語"><i class="fas fa-clipboard-list"></i><span class="d-lg-none ms-2">間違えた単語</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}" title="ログアウト"><i class="fas fa-sign-out-alt"></i><span class="d-lg-none ms-2">ログアウト</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'quiz_start' %}"><i class="fas fa-question-circle me-1"></i>クイズ</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'mistake_words' %}"><i class="fas fa-clipboard-list me-1"></i>間違えた単語</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-1"></i>ログアウト</a></li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-1"></i>ログイン</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus me-1"></i>登録</a></li>
